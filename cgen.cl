@@ -32,6 +32,14 @@
                           (append a b) (append a `(,b))))
           (append '(nil) codes-args)))
 
+(defun cdpr (condexpr &rest codes-args)
+  (append `(,condexpr)
+     (reduce (lambda (a b) (if
+                              (or (typep b 'cons)
+                                  (typep b 'null))
+                              (append a b) (append a `(,b))))
+              (append '(nil) codes-args))))
+
 (defun indent-codes (lines)
   (map 'list
        (lambda (line) (concatenate 'string "    " line))
@@ -123,7 +131,7 @@
 
                             (codes
                               (if safe-wrap (format nil "case ~A: {" (car a-case)) (format nil "case ~A:" (car a-case)))
-                              (cdr a-case)
+                              (if safe-wrap (indent-codes (cdr a-case)) (cdr a-case))
                               (if safe-wrap "} break;" "")))
                           `(,(if safe-wrap "default: {" "default: ")
                              ,(if safe-wrap (indent-codes (cdr a-case)) (cdr a-case))
