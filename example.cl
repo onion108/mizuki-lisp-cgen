@@ -14,6 +14,12 @@
                                               "i < n"
                                               "i++"
                                               (codes "a;" "b;"))
-                                   (cstmt-while "true" '("bbb;")))))
+                                   (cstmt-while "true" '("bbb;"))
+                                   (cstmt-switch "testexpr" 
+                                                 '(
+                                                   ("1" "hi;")
+                                                   (("2" "3") "hoy;" "yeah;")
+                                                   (("4" "5") "huh?")
+                                                   (nil "yoshi."))))))
   "/dev/stdout")
 

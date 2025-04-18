@@ -32,6 +32,18 @@
                           (append a b) (append a `(,b))))
           (append '(nil) codes-args)))
 
+(defun indent-codes (lines)
+  (map 'list
+       (lambda (line) (concatenate 'string "    " line))
+       lines))
+
+;; Flatten a tree-like code.
+(defun flatten-codes (c)
+  (if (null c) nil
+    (if (atom (first c))
+      (cons (first c) (flatten-codes (rest c)))
+      (append (flatten-codes (first c)) (flatten-codes (rest c))))))
+
 ;; A function definition.
 ;; return-type is a string, denotes the return type.
 ;; func-name is the name of the function.
@@ -92,6 +104,32 @@
 ;; body-else is the body of else, another list of strings.
 (defun cstmt-ifelse (cond-expr body-if body-else)
   (cstmt-if cond-expr body-if `( ,(append '(nil) body-else))))
+
+;; A `switch` statement.
+;; var-expr is the expression to switch.
+;; cases is list of lists; each list in the lists starts with a string or a list, denoting cases, or nil, denoting the default case.
+;; safe-wrap enables safe wrapper around each cases (case A: case B: {} break;).
+(defun cstmt-switch (var-expr cases &optional (safe-wrap t))
+  (codes (format nil "switch (~A) {" var-expr)
+         (flatten-codes
+           (map 'list (lambda (a-case)
+                        (if (car a-case)
+                          (if (typep (car a-case) 'cons)
+                            (codes
+                              (loop for i in (car a-case) collect (format nil "case ~A:" i))
+                              (if safe-wrap "{" "")
+                              (if safe-wrap (indent-codes (cdr a-case)) (cdr a-case))
+                              (if safe-wrap "} break;" ""))
+
+                            (codes
+                              (if safe-wrap (format nil "case ~A: {" (car a-case)) (format nil "case ~A:" (car a-case)))
+                              (cdr a-case)
+                              (if safe-wrap "} break;" "")))
+                          `(,(if safe-wrap "default: {" "default: ")
+                             ,(if safe-wrap (indent-codes (cdr a-case)) (cdr a-case))
+                             ,(if safe-wrap "} break;" "")
+                             )))
+                cases))))
 
 ;; A for loop.
 ;; init-stmt is the initializaiton statement.
