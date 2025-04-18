@@ -86,6 +86,13 @@
                     (error "Cannot have else before else ifs")))) 
               elses))))
 
+;; Shorthand for it with an else branch.
+;; cond-expr is a string represents condition.
+;; body-if is the body of if, a list of strings.
+;; body-else is the body of else, another list of strings.
+(defun cstmt-ifelse (cond-expr body-if body-else)
+  (cstmt-if cond-expr body-if `( ,(append '(nil) body-else))))
+
 ;; A for loop.
 ;; init-stmt is the initializaiton statement.
 ;; cond-expr is the condition.
