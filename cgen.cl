@@ -1,3 +1,19 @@
+; This library is published under WTFPL. The content is given as following:
+; 
+;         DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE 
+;                     Version 2, December 2004 
+; 
+;  Copyright (C) 2025 27Onion Nebell <zzy20080201@gmail.com> 
+; 
+;  Everyone is permitted to copy and distribute verbatim or modified 
+;  copies of this license document, and changing it is allowed as long 
+;  as the name is changed. 
+; 
+;             DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE 
+;    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION 
+; 
+;   0. You just DO WHAT THE FUCK YOU WANT TO.
+
 (require :uiop)
 ;; Write code to target file.
 ;; Code is a list of code lines, and file-name is the name of (path to) the target file.
