@@ -1,3 +1,7 @@
+; Filename: cgen.cl
+; Author: 27Onion Nebell <zzy20080201@gmail.com>
+; Last modified: May 1 2024
+;
 ; This library is published under WTFPL. The content is given as following:
 ; 
 ;         DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE 
