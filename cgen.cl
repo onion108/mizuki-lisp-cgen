@@ -141,6 +141,7 @@
 ;; cases is list of lists; each list in the lists starts with a string or a list, denoting cases, or nil, denoting the default case.
 ;; safe-wrap enables safe wrapper around each cases (case A: case B: {} break;).
 (defun cstmt-switch (var-expr cases &optional (safe-wrap t))
+  (unless (typep var-expr 'string) (error "Invalid switch condition"))
   (codes (format nil "switch (~A) {" var-expr)
          (flatten-codes
            (map 'list (lambda (a-case)
