@@ -71,6 +71,7 @@
 ;; body is a list of string, containing codes.
 (defun cdef-function (return-type func-name arguments body)
   (unless (ccodegen-validate-body body) (error "Invalid body"))
+  (unless (typep func-name 'string) (error "Function name must be a string"))
   (let ((normalize-args (if
                           (or (typep arguments 'cons) 
                               (typep arguments 'null)) 
@@ -87,6 +88,7 @@
 ;; body is the body of the statement, a list of string;
 ;; the options elses contains a list of lists. In every element, the first element of it should be a condition or nil, and the rest will be treat as body.
 (defun cstmt-if (condi body &optional elses)
+  (unless (typep condi 'string) (error "Invalid if condition"))
   (unless (ccodegen-validate-body body) (error "Invalid body"))
   (append `(,(format nil "if (~A) {" condi))
           (map 'list
@@ -177,16 +179,18 @@
 ;; the above are all strings, and then the body, list of strings.
 (defun cstmt-while (cond-expr body) 
   (unless (ccodegen-validate-body body) (error "Invalid body"))
+  (unless (typep cond-expr 'string) (error "Invalid while condition"))
   (append `(,(format nil "while (~A) {" cond-expr)) 
           (map 'list
                (lambda (line) (concatenate 'string "    " line))
                body)
           '("}")))
 
-;; A while loop.
+;; A do...while loop.
 ;; body is a list of code lines, and cond-expr is the condition.
 (defun cstmt-do-while (body cond-expr) 
   (unless (ccodegen-validate-body body) (error "Invalid body"))
+  (unless (typep cond-expr 'string) (error "Invalid do ... while condition"))
   (append '("do {") 
           (map 'list
                (lambda (line) (concatenate 'string "    " line))
@@ -195,11 +199,11 @@
 
 ;; An include directive
 (defun cprepro-include (name &optional (angled-quote nil))
+  (unless (typep name 'string) (error "Filename must be string"))
   (format nil "#include ~C~A~C"
           (if angled-quote #\< #\")
           name
           (if angled-quote #\> #\")))
-
 
 ;; Run generator program.
 ;; Program reads file name from command-line arguments, and pass to fn.
