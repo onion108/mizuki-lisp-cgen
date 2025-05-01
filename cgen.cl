@@ -15,9 +15,18 @@
 ;   0. You just DO WHAT THE FUCK YOU WANT TO.
 
 (require :uiop)
+
+;; Validate a code segment.
+(defun ccodegen-validate-body (obj) 
+  (cond 
+    ((typep obj 'cons) (reduce (lambda (a b) (if (typep b 'string) (and a t) (and a nil))) (append '(t) obj)))
+    ((typep obj 'null) t)
+    (t nil)))
+
 ;; Write code to target file.
 ;; Code is a list of code lines, and file-name is the name of (path to) the target file.
 (defun write-code (code file-name)
+  (if (not (ccodegen-validate-body code)) (error "Invalid code segment") nil)
   (with-open-file (out-file file-name
                             :direction :output
                             :if-exists :supersede
@@ -26,19 +35,21 @@
 
 ;; A bunch of codes. The element can be string or list of strings.
 (defun codes (&rest codes-args) 
-  (reduce (lambda (a b) (if
-                          (or (typep b 'cons)
-                              (typep b 'null))
-                          (append a b) (append a `(,b))))
+  (reduce (lambda (a b) (cond
+                          ((or (typep b 'cons)
+                               (typep b 'null)) (append a b)) 
+                          ((typep b 'string) (append a `(,b)))
+                          (t (error (format nil "Invalid segment: ~A" b)))))
           (append '(nil) codes-args)))
 
 (defun cdpr (condexpr &rest codes-args)
   (append `(,condexpr)
-     (reduce (lambda (a b) (if
-                              (or (typep b 'cons)
-                                  (typep b 'null))
-                              (append a b) (append a `(,b))))
-              (append '(nil) codes-args))))
+          (reduce (lambda (a b) (cond
+                                  ((or (typep b 'cons)
+                                       (typep b 'null)) (append a b)) 
+                                  ((typep b 'string) (append a `(,b)))
+                                  (t (error (format nil "Invalid segment: ~A" b)))))
+                  (append '(nil) codes-args))))
 
 (defun indent-codes (lines)
   (map 'list
@@ -59,6 +70,7 @@
 ;; arguments could be list of arguments, or a plain string containing all arguments.
 ;; body is a list of string, containing codes.
 (defun cdef-function (return-type func-name arguments body)
+  (unless (ccodegen-validate-body body) (error "Invalid body"))
   (let ((normalize-args (if
                           (or (typep arguments 'cons) 
                               (typep arguments 'null)) 
@@ -75,6 +87,7 @@
 ;; body is the body of the statement, a list of string;
 ;; the options elses contains a list of lists. In every element, the first element of it should be a condition or nil, and the rest will be treat as body.
 (defun cstmt-if (condi body &optional elses)
+  (unless (ccodegen-validate-body body) (error "Invalid body"))
   (append `(,(format nil "if (~A) {" condi))
           (map 'list
                (lambda (line) (concatenate 'string "    " line))
@@ -112,6 +125,9 @@
 ;; body-if is the body of if, a list of strings.
 ;; body-else is the body of else, another list of strings.
 (defun cstmt-ifelse (cond-expr body-if body-else)
+  (unless (ccodegen-validate-body body-if) (error "Invalid if body"))
+  (unless (ccodegen-validate-body body-else) (error "Invalid else body"))
+  (unless (typep cond-expr 'string) (error (format nil "Invalid conditional: ~A" cond-expr)))
   (cstmt-if cond-expr body-if `( ,(append '(nil) body-else))))
 
 ;; A `switch` statement.
@@ -146,6 +162,10 @@
 ;; after-expr is the after expression.
 ;; the above are all strings, and then the body, list of strings.
 (defun cstmt-for (init-stmt cond-expr after-expr body) 
+  (unless (ccodegen-validate-body body) (error "Invalid body"))
+  (unless (typep init-stmt 'string) (error "Invalid initialization statement"))
+  (unless (typep cond-expr 'string) (error "Invalid conditional expression"))
+  (unless (typep after-expr 'string) (error "Invalid after expression"))
   (append `(,(format nil "for (~A; ~A; ~A) {" init-stmt cond-expr after-expr)) 
           (map 'list
                (lambda (line) (concatenate 'string "    " line))
@@ -156,6 +176,7 @@
 ;; cond-expr is the condition.
 ;; the above are all strings, and then the body, list of strings.
 (defun cstmt-while (cond-expr body) 
+  (unless (ccodegen-validate-body body) (error "Invalid body"))
   (append `(,(format nil "while (~A) {" cond-expr)) 
           (map 'list
                (lambda (line) (concatenate 'string "    " line))
@@ -165,6 +186,7 @@
 ;; A while loop.
 ;; body is a list of code lines, and cond-expr is the condition.
 (defun cstmt-do-while (body cond-expr) 
+  (unless (ccodegen-validate-body body) (error "Invalid body"))
   (append '("do {") 
           (map 'list
                (lambda (line) (concatenate 'string "    " line))
