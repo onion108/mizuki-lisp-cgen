@@ -46,6 +46,7 @@
        lines))
 
 ;; Flatten a tree-like code.
+;; Should not be used in most of the case...?
 (defun flatten-codes (c)
   (if (null c) nil
     (if (atom (first c))
